@@ -1,0 +1,9 @@
+[Unit]
+Description=autosocks connection (%J:%I)
+
+StopWhenUnneeded=true
+
+[Service]
+Type=simple
+ExecStart=-bash -c 'exec ssh -NT -o "ControlPath=~/.ssh/autosocks-%%C" -o "ExitOnForwardFailure=yes" -D "$(( %I + 1 ))" "%J"'
+ExecStartPost=/bin/sleep 2

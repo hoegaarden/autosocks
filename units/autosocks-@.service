@@ -1,0 +1,11 @@
+[Unit]
+Description=autosocks proxy (%J:%I)
+
+BindsTo=autosocks-%j@%i.socket
+After=autosocks-%j@%i.socket
+
+BindsTo=autosocks-connection-%j@%i.service
+After=autosocks-connection-%j@%i.service
+
+[Service]
+ExecStart=bash -c 'exec /lib/systemd/systemd-socket-proxyd --exit-idle-time=1m "127.0.0.1:$(( %I + 1 ))"'

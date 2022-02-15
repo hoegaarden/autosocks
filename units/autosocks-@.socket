@@ -1,0 +1,8 @@
+[Unit]
+Description=autosocks socket (%J:%I)
+
+[Socket]
+ListenStream=127.0.0.1:%i
+
+[Install]
+WantedBy=sockets.target
