@@ -1,5 +1,5 @@
 [Unit]
-Description=autosocks proxy (%J:%I)
+Description=autosocks proxy (:%I -> %J)
 
 BindsTo=autosocks-%j@%i.socket
 After=autosocks-%j@%i.socket
@@ -8,4 +8,6 @@ BindsTo=autosocks-connection-%j@%i.service
 After=autosocks-connection-%j@%i.service
 
 [Service]
-ExecStart=bash -c 'exec /lib/systemd/systemd-socket-proxyd --exit-idle-time=1m "127.0.0.1:$(( %I + 1 ))"'
+Environment=AUTOSOCKS_IP=127.255.255.254
+Environment=AUTOSOCKS_IDLE_TIME=1m
+ExecStart=/lib/systemd/systemd-socket-proxyd --exit-idle-time="${AUTOSOCKS_IDLE_TIME}" "${AUTOSOCKS_IP}:%I"

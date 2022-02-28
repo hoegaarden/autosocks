@@ -1,5 +1,5 @@
 [Unit]
-Description=autosocks socket (%J:%I)
+Description=autosocks socket (:%I -> %J)
 
 [Socket]
 ListenStream=127.0.0.1:%i
