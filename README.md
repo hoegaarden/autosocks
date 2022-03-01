@@ -168,25 +168,29 @@ https_proxy=socks5://localhost:65500 curl https://google.com/
 ```
 
 And what you see now:
-- There is a ssh process, connecting to `opsman.sandbox.acme` which is listening as a socks server on 127.255.255.254:65500
-- There is a process `systemd-socket-proxyd` running now, which proxies everything on port 127.0.0.1:65500 to port 127.255.255.254:65500
+- There is a ssh process, connecting to `opsman.sandbox.acme` which is listening as a socks server on `127.255.255.254:65500`
+- There is a process `systemd-socket-proxyd` running now, which proxies everything on port `127.0.0.1:65500` to port `127.255.255.254:65500`
 
 If you wait a bit and there is no further traffic going through 65500
 - both `ssh` and `systemd-socket-proxyd` will shut down automatically.
-- the socket listening on 127.0.0.1:65500 will be moved back to the systemd process
+- the socket listening on `127.0.0.1:65500` will be moved back to the systemd process
 
 
 ## How it works, how the things interact
 
-- Once the `autosocks-@.socket` instance is running, systemd will listen on that intance's port (e.g. 127.0.0.1:65500)
-- If there is a connection to that port, systemd start
-  - `ssh` to the instance's host, running a socks server on the port 1 higher than the instance's port (e.g. 127.255.255.254:65500)
-    - `127.255.255.254` is just another IP on the loopback interface. Any other
-      local IP can be used; this is configured as `AUTOSOCKS_IP` in the
-      `autosocks-@.service` & `autosocks-connection-@.service` units
-    - The port that is used on `127.255.255.254` is the same on that is used on the `127.0.0.1`, the one you'd use for your clients
-    - It's probably best to keep `127.255.255.254` exclusively for autosocks, so there are no port collisions
-  - `systemd-socket-proxyd` will be started; it will receive the socket from `systemd` and use it to receive traffic on 127.0.0.1:65500 and proxy it through to 127.255.255.254:65500
+- Once the `autosocks-@.socket` instance is running, `systemd` will listen on
+  that intance's port (e.g. `127.0.0.1:65500`)
+- If there is a connection to that port, `systemd` starts
+  - `ssh` to the unit's instance's host, running a socks proxy service on the
+     same port but on `127.255.255.254` (e.g. `127.255.255.254:65500`)
+     - `127.255.255.254` is just another IP on the loopback interface. Any other
+        local IP can be used; this is configured as `AUTOSOCKS_IP` in the
+        `autosocks-@.service` & `autosocks-connection-@.service` units
+     - It's probably best to keep `127.255.255.254` exclusively for autosocks to
+       reduce the chance of port collisions
+  - `systemd-socket-proxyd` will be started; it will receive the socket from
+    `systemd` and use it to receive traffic on `127.0.0.1:65500` and proxy it
+     through to `127.255.255.254:65500`
 - `systemd-socket-proxyd` will shutdown, if it's idle for a bit
   - once `systemd-socket-proxyd` shuts down, so will the `ssh` connection providing the socks server
 - if any of either the ssh connection or the activation socket will shutdown or
